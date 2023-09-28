@@ -3,6 +3,7 @@ import videojs from "video.js";
 import Video from "./Video";
 import "./index.css";
 import $ from "jquery";
+import { generateProgressBarChapters } from "../utils";
 
 type Props = {
   videoUrl: string;
@@ -45,7 +46,7 @@ export default function Index({ videoUrl, chapterName }: Props) {
         //   default: true,
         // },
         {
-          src: `./${chapterName}`,
+          src: `${process.env.PUBLIC_URL}/chapters/${chapterName}`,
           kind: "chapters",
           label: "English",
           default: true,
@@ -56,51 +57,48 @@ export default function Index({ videoUrl, chapterName }: Props) {
     return options;
   }, [chapterName, videoUrl]);
 
-  const handlePlayerReady = useCallback((player: any) => {
-    playerRef.current = player;
+  const handlePlayerReady = useCallback(
+    (player: any) => {
+      playerRef.current = player;
 
-    player.on("loadedmetadata", () => {
-      const markers = [
-        { time: 0, label: "Chapter 1" },
-        { time: 5, label: "Chapter 2" },
-        { time: 10, label: "Chapter 3" },
-        { time: 20, label: "Chapter 4" },
-        { time: 36, label: "Chapter 5" },
-      ];
-
-      const total = player.duration();
-
-      const p = $(player.controlBar.progressControl.children_[0].el_);
-      for (let i = 0; i < markers.length; i++) {
-        const left = (markers[i].time / total) * 100 + "%";
-
-        const time = markers[i].time;
-
-        const el = $(
-          '<div class="vjs-marker" style="left:' +
-            left +
-            '" data-time="' +
-            time +
-            '"><span>' +
-            markers[i].label +
-            "</span></div>"
+      player.on("loadedmetadata", async () => {
+        const markers = await generateProgressBarChapters(
+          `${process.env.PUBLIC_URL}/chapters/${chapterName}`
         );
-        el.click(function () {
-          player.currentTime($(this).data("time"));
-        });
+        const total = player.duration();
 
-        p.append(el);
-      }
-    });
+        const p = $(player.controlBar.progressControl.children_[0].el_);
+        for (let i = 0; i < markers.length; i++) {
+          const left = (markers[i].time / total) * 100 + "%";
 
-    player.on("ended", () => {
-      player.log("player is ended");
-    });
+          const time = markers[i].time;
+          const el = $(
+            '<div class="vjs-marker" style="left:' +
+              left +
+              '" data-time="' +
+              time +
+              '"><span>' +
+              markers[i].label +
+              "</span></div>"
+          );
+          el.click(function () {
+            player.currentTime($(this).data("time"));
+          });
 
-    player.on("dispose", () => {
-      player.log("player will dispose");
-    });
-  }, []);
+          p.append(el);
+        }
+      });
+
+      player.on("ended", () => {
+        player.log("player is ended");
+      });
+
+      player.on("dispose", () => {
+        player.log("player will dispose");
+      });
+    },
+    [chapterName]
+  );
 
   return (
     <div className='container'>
