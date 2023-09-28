@@ -4,7 +4,12 @@ import Video from "./Video";
 import "./index.css";
 import $ from "jquery";
 
-export default function Index() {
+type Props = {
+  videoUrl: string;
+  chapterName: string;
+};
+
+export default function Index({ videoUrl, chapterName }: Props) {
   const playerRef = useRef<any>(null);
 
   const videoJsOptions = useMemo(() => {
@@ -15,7 +20,7 @@ export default function Index() {
         pictureInPictureToggle: false,
       },
       bigPlayButton: false,
-      autoplay: false,
+      autoplay: true,
       responsive: true,
       fluid: true,
       loop: false,
@@ -24,11 +29,11 @@ export default function Index() {
       html5: {
         nativeTextTracks: false,
       },
-      poster: "https://assets.anyquestion.com/video/upload/so_0p/z7vdykf2auktylprpt7k.jpg",
+      // poster: "https://assets.anyquestion.com/video/upload/so_0p/z7vdykf2auktylprpt7k.jpg",
       preload: "metadata",
       sources: [
         {
-          src: "https://assets.anyquestion.com/video/upload/sp_mobile_default/z7vdykf2auktylprpt7k.m3u8",
+          src: videoUrl,
           type: "application/x-mpegURL",
         },
       ],
@@ -40,7 +45,7 @@ export default function Index() {
         //   default: true,
         // },
         {
-          src: "./chapters.vtt",
+          src: `./${chapterName}`,
           kind: "chapters",
           label: "English",
           default: true,
@@ -49,7 +54,7 @@ export default function Index() {
     };
 
     return options;
-  }, []);
+  }, [chapterName, videoUrl]);
 
   const handlePlayerReady = useCallback((player: any) => {
     playerRef.current = player;
